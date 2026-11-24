@@ -1,0 +1,17 @@
+{
+  "background_color": "#f7f3e8",
+  "description": "FixFlow — repair-shop SaaS, Phase 2 foundation.",
+  "dir": "rtl",
+  "display": "standalone",
+  "icons": [
+    { "purpose": "any", "sizes": "192x192", "src": "/icons/icon-192.png", "type": "image/png" },
+    { "purpose": "any", "sizes": "512x512", "src": "/icons/icon-512.png", "type": "image/png" },
+    { "purpose": "any", "sizes": "512x512", "src": "/icons/icon.svg", "type": "image/svg+xml" }
+  ],
+  "lang": "ar",
+  "name": "FixFlow",
+  "scope": "/",
+  "short_name": "FixFlow",
+  "start_url": "/",
+  "theme_color": "#0f3d2e"
+}

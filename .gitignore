@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+coverage/
+*.log
+.DS_Store
+apps/web/dist/
+apps/api/dist/
+
+apps/api/src/generated/
+.playwright/
+.github/

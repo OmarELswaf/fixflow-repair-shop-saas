@@ -1,0 +1,591 @@
+// Prisma 7 schema. Money is Decimal. Tenant-scoped uniques and indexes
+// are here; composite FKs that Prisma cannot express are enforced in
+// the SQL migrations (see docs/DATABASE.md).
+generator client {
+  provider = "prisma-client"
+  moduleFormat = "cjs"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MembershipRole {
+  owner
+  admin
+  manager
+  technician
+  cashier
+  receptionist
+  accountant
+}
+
+enum RepairStatus {
+  received
+  diagnosing
+  awaiting_approval
+  awaiting_parts
+  in_repair
+  quality_check
+  ready
+  delivered
+  cancelled
+  unrepairable
+}
+
+enum RepairPartStatus {
+  reserved
+  consumed
+  released
+}
+
+enum SubscriptionStatus {
+  trial
+  active
+  past_due
+  suspended
+  cancelled
+  expired
+}
+
+model Tenant {
+  resellerTenants ResellerTenant[]
+  id         String       @id @default(cuid())
+  name       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  branches   Branch[]
+  memberships Membership[]
+  customers  Customer[]
+  parts      Part[]
+  suppliers  Supplier[]
+  subscriptions Subscription[]
+  branding   TenantBranding?
+  publicProfile TenantPublicProfile?
+  auditLogs  AuditLog[]
+  refreshSessions RefreshSession[]
+  webhookEvents WebhookEvent[]
+
+  @@map("tenants")
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stocks    BranchStock[]
+  orders    RepairOrder[]
+  invoices  Invoice[]
+  purchaseOrders PurchaseOrder[]
+  repairParts RepairPart[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt, id])
+  @@map("branches")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String?
+  passwordHash String
+  emailVerifiedAt DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+  refreshSessions RefreshSession[]
+  assignedRepairs RepairOrder[] @relation("AssignedRepairs")
+  stockMovements StockMovement[]
+
+  @@map("users")
+}
+
+model Membership {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  role        MembershipRole
+  branchIds   String[]
+  createdAt   DateTime       @default(now())
+
+  @@unique([userId, tenantId])
+  @@unique([tenantId, userId])
+  @@index([tenantId, userId])
+  @@map("memberships")
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  tenantId    String
+  name        String
+  permissions RolePermission[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+  @@map("roles")
+}
+
+model Permission {
+  id    String           @id @default(cuid())
+  name  String           @unique
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  tenantId     String
+  roleId       String
+  role         Role       @relation(fields: [tenantId, roleId], references: [tenantId, id])
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([tenantId, roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Customer {
+  id        String        @id @default(cuid())
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  name      String
+  phone     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  devices   Device[]
+  orders    RepairOrder[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt, id])
+  @@map("customers")
+}
+
+model Device {
+  id         String        @id @default(cuid())
+  tenantId   String
+  customerId String
+  customer   Customer      @relation(fields: [tenantId, customerId], references: [tenantId, id])
+  brand      String
+  model      String
+  serial     String?
+  createdAt  DateTime      @default(now())
+  orders     RepairOrder[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, customerId, createdAt, id])
+  @@map("devices")
+}
+
+model RepairOrder {
+  id         String   @id @default(cuid())
+  tenantId   String
+  branchId   String
+  branch     Branch   @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  customerId String
+  customer   Customer @relation(fields: [tenantId, customerId], references: [tenantId, id])
+  deviceId   String
+  device     Device   @relation(fields: [tenantId, deviceId], references: [tenantId, id])
+  status     RepairStatus @default(received)
+  assignedTechnicianId String?
+  assignedTechnician User? @relation("AssignedRepairs", fields: [assignedTechnicianId], references: [id])
+  version    Int      @default(0)
+  problemDescription String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  events     RepairEvent[]
+  approvals  RepairApproval[]
+  invoices   Invoice[]
+  repairParts RepairPart[]
+  movements  StockMovement[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt, id])
+  @@index([tenantId, branchId, createdAt, id])
+  @@index([tenantId, status, createdAt, id])
+  @@map("repair_orders")
+}
+
+model RepairEvent {
+  id         String       @id @default(cuid())
+  tenantId   String
+  orderId    String
+  order      RepairOrder  @relation(fields: [tenantId, orderId], references: [tenantId, id])
+  actorId    String
+  fromStatus RepairStatus?
+  toStatus   RepairStatus
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  @@index([tenantId, orderId, createdAt, id])
+  @@map("repair_events")
+}
+
+model RepairApproval {
+  id        String      @id @default(cuid())
+  tenantId  String
+  orderId   String
+  order     RepairOrder @relation(fields: [tenantId, orderId], references: [tenantId, id])
+  type      String
+  amount    Decimal?    @db.Decimal(19, 4)
+  status    String      @default("pending")
+  approverId String?
+  createdAt DateTime    @default(now())
+
+  @@index([tenantId, orderId, createdAt, id])
+  @@map("repair_approvals")
+}
+
+model Part {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  sku       String
+  name      String
+  createdAt DateTime @default(now())
+  stocks    BranchStock[]
+  purchaseOrderLines PurchaseOrderLine[]
+  repairParts RepairPart[]
+
+  @@unique([tenantId, sku])
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt, id])
+  @@map("parts")
+}
+
+model BranchStock {
+  tenantId   String
+  branchId   String
+  branch     Branch @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  partId     String
+  part       Part   @relation(fields: [tenantId, partId], references: [tenantId, id])
+  qtyOnHand  Int    @default(0)
+  reservedQty Int   @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@id([tenantId, branchId, partId])
+  @@map("branch_stock")
+}
+
+model StockMovement {
+  id            String       @id @default(cuid())
+  tenantId      String
+  branchId      String
+  partId        String
+  qty           Int
+  reason        String
+  repairOrderId String?
+  order         RepairOrder? @relation(fields: [tenantId, repairOrderId], references: [tenantId, id])
+  repairPartId  String?
+  repairPart    RepairPart?  @relation(fields: [tenantId, repairPartId], references: [tenantId, id])
+  operationKey  String?
+  actorId       String?
+  actor         User?        @relation(fields: [actorId], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@index([tenantId, branchId, partId, createdAt, id])
+  @@index([tenantId, repairOrderId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([tenantId, operationKey, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([tenantId, actorId, createdAt(sort: Desc), id(sort: Desc)])
+  @@map("stock_movements")
+}
+
+model RepairPart {
+  id        String           @id @default(cuid())
+  tenantId  String
+  orderId   String
+  order     RepairOrder      @relation(fields: [tenantId, orderId], references: [tenantId, id])
+  partId    String
+  part      Part             @relation(fields: [tenantId, partId], references: [tenantId, id])
+  branchId  String
+  branch    Branch           @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  qty       Int
+  status    RepairPartStatus @default(reserved)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  movements StockMovement[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, orderId, createdAt, id])
+  @@map("repair_parts")
+}
+
+model StockIdempotency {
+  id           String   @id @default(cuid())
+  tenantId     String
+  key          String
+  scope        String
+  entityId     String
+  responseJson Json
+  createdAt    DateTime @default(now())
+
+  @@unique([tenantId, scope, key])
+  @@map("stock_idempotency")
+}
+
+model Supplier {
+  id        String          @id @default(cuid())
+  tenantId  String
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime        @default(now())
+  orders    PurchaseOrder[]
+
+  @@unique([tenantId, id])
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  tenantId   String
+  branchId   String
+  branch     Branch              @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  supplierId String
+  supplier   Supplier            @relation(fields: [tenantId, supplierId], references: [tenantId, id])
+  status     String              @default("draft")
+  createdAt  DateTime            @default(now())
+  lines      PurchaseOrderLine[]
+
+  @@unique([tenantId, id])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id              String        @id @default(cuid())
+  tenantId        String
+  purchaseOrderId String
+  order           PurchaseOrder @relation(fields: [tenantId, purchaseOrderId], references: [tenantId, id])
+  partId          String
+  part            Part          @relation(fields: [tenantId, partId], references: [tenantId, id])
+  qty             Int
+  unitPrice       Decimal       @db.Decimal(19, 4)
+
+  @@index([tenantId, purchaseOrderId])
+  @@map("purchase_order_lines")
+}
+
+model Invoice {
+  id        String    @id @default(cuid())
+  tenantId  String
+  branchId  String
+  branch    Branch    @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  orderId   String
+  order     RepairOrder @relation(fields: [tenantId, orderId], references: [tenantId, id])
+  currency  String
+  total     Decimal   @db.Decimal(19, 4)
+  createdAt DateTime  @default(now())
+  payments  Payment[]
+  refunds   Refund[]
+  ledger    LedgerEntry[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt, id])
+  @@map("invoices")
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  tenantId       String
+  invoiceId      String
+  invoice        Invoice  @relation(fields: [tenantId, invoiceId], references: [tenantId, id])
+  method         String
+  amount         Decimal  @db.Decimal(19, 4)
+  idempotencyKey String
+  createdAt      DateTime @default(now())
+  refunds        Refund[]
+
+  @@unique([tenantId, idempotencyKey])
+  @@unique([tenantId, id])
+  @@index([tenantId, invoiceId, createdAt, id])
+  @@map("payments")
+}
+
+model Refund {
+  id        String   @id @default(cuid())
+  tenantId  String
+  invoiceId String
+  invoice   Invoice  @relation(fields: [tenantId, invoiceId], references: [tenantId, id])
+  paymentId String?
+  payment   Payment? @relation(fields: [tenantId, paymentId], references: [tenantId, id])
+  amount    Decimal  @db.Decimal(19, 4)
+  reason    String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, id])
+  @@map("refunds")
+}
+
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  tenantId  String
+  invoiceId String
+  invoice   Invoice  @relation(fields: [tenantId, invoiceId], references: [tenantId, id])
+  refType   String
+  refId     String
+  amount    Decimal  @db.Decimal(19, 4)
+  direction String
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, invoiceId, createdAt, id])
+  @@map("ledger_entries")
+}
+
+model Plan {
+  id       String        @id @default(cuid())
+  name     String
+  versions PlanVersion[]
+
+  @@map("plans")
+}
+
+model PlanVersion {
+  id            String         @id @default(cuid())
+  planId        String
+  plan          Plan           @relation(fields: [planId], references: [id])
+  version       Int
+  entitlements  Entitlement[]
+  subscriptions Subscription[]
+
+  @@unique([planId, version])
+  @@map("plan_versions")
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  tenantId      String
+  tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  planVersionId String
+  planVersion   PlanVersion        @relation(fields: [planVersionId], references: [id])
+  status        SubscriptionStatus @default(trial)
+  currentPeriodEnd DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status])
+  @@map("subscriptions")
+}
+
+model Entitlement {
+  id            String      @id @default(cuid())
+  planVersionId String
+  planVersion   PlanVersion @relation(fields: [planVersionId], references: [id])
+  feature       String
+  limitValue    Int?
+
+  @@unique([planVersionId, feature])
+  @@map("entitlements")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  provider  String
+  eventId   String
+  payloadHash String
+  processedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, provider, eventId])
+  @@map("webhook_events")
+}
+
+model TenantBranding {
+  tenantId String @id
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  logoKey  String?
+  colors   Json?
+  domain   String?
+
+  @@map("tenant_branding")
+}
+
+/**
+ * Per-tenant public profile (landing page), Phase 10. Owner-configured
+ * only: nothing is copied from private operational data and no row
+ * exists until the owner creates one. One profile per tenant
+ * (tenantId is the PK); slug is globally unique. services/contact/
+ * hours are validated JSON (see public-profile/dto.ts). published
+ * defaults to false: a profile is invisible to the public endpoint
+ * until the owner publishes it. RLS: tenant_isolation plus a narrow
+ * published-only SELECT policy for the unauthenticated public read
+ * (see migration 0009).
+ */
+model TenantPublicProfile {
+  tenantId    String   @id
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  slug        String   @unique
+  published   Boolean  @default(false)
+  displayName String?
+  description String?
+  logoUrl     String?
+  theme       String   @default("green")
+  services    Json?
+  contact     Json?
+  hours       Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tenant_public_profiles")
+}
+
+model Reseller {
+  id       String          @id @default(cuid())
+  name     String
+  tenants  ResellerTenant[]
+
+  @@map("resellers")
+}
+
+model ResellerTenant {
+  resellerId String
+  reseller   Reseller @relation(fields: [resellerId], references: [id])
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  terms      Json?
+
+  @@id([resellerId, tenantId])
+  @@map("reseller_tenants")
+}
+
+model RefreshSession {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  tokenHash    String    @unique
+  familyId     String
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  lastUsedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, familyId])
+  @@index([tenantId, userId])
+  @@map("refresh_sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  actorId   String
+  action    String
+  entity    String
+  entityId  String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt, id])
+  @@map("audit_log")
+}

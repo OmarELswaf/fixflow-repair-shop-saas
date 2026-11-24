@@ -1,0 +1,22 @@
+# Render blueprint for the free demo. Secrets are set in the Render dashboard (sync: false).
+services:
+  - type: web
+    name: fixflow-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REGISTRATION_ENABLED
+        value: 'false'
+      - key: WEB_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true

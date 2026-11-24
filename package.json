@@ -1,0 +1,51 @@
+{
+  "description": "FixFlow Phase 2 foundation \u2014 modular monolith, Arabic-first repair-shop SaaS. Foundation only, not production-ready.",
+  "devDependencies": {
+    "eslint": "10.15.0",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3",
+    "@eslint/js": "10.0.1"
+  },
+  "engines": {
+    "node": ">=24.9",
+    "npm": ">=10"
+  },
+  "name": "fixflow",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspace=@fixflow/api & npm run dev --workspace=@fixflow/web",
+    "dev:api": "npm run dev --workspace=@fixflow/api",
+    "dev:web": "npm run dev --workspace=@fixflow/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "prisma:generate": "npm run prisma:generate --workspace=@fixflow/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@fixflow/api",
+    "test": "npm run test --workspaces --if-present",
+    "test:api": "npm run test --workspace=@fixflow/api",
+    "test:web": "npm run test --workspace=@fixflow/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:db": "node scripts/test-database.mjs",
+    "test:auth:http": "npm run build --workspace=@fixflow/api && node scripts/test-auth-http.mjs",
+    "test:repairs:http": "npm run build --workspace=@fixflow/api && node scripts/test-repairs-http.mjs",
+    "test:inventory:http": "npm run build --workspace=@fixflow/api && node scripts/test-inventory-http.mjs",
+    "test:reports:http": "npm run build --workspace=@fixflow/api && node scripts/test-reports-http.mjs",
+    "test:public-profile:http": "npm run build --workspace=@fixflow/api && node scripts/test-public-profile-http.mjs",
+    "test:contention:pg": "node scripts/test-contention.mjs",
+    "test:pg16": "node scripts/local-pg16-test.mjs",
+    "test:all": "node scripts/run-checks.mjs",
+    "test:ci": "node scripts/run-checks.mjs",
+    "test:ui:review": "npm run build && node scripts/review-ui-check.mjs"
+  },
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "@prisma/config": {
+      "effect": "3.22.5"
+    }
+  }
+}

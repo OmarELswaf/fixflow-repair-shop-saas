@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+# Development initialization only. Owner password is managed by postgres image.
+: "${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}"
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --set=app_password="$APP_DB_PASSWORD" <<'SQL'
+CREATE ROLE fixflow_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD :'app_password';
+GRANT CONNECT ON DATABASE fixflow TO fixflow_app;
+GRANT USAGE ON SCHEMA public TO fixflow_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO fixflow_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO fixflow_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO fixflow_app;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+SQL
