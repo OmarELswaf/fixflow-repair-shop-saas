@@ -4,7 +4,10 @@ Arabic-first (RTL, English supported) multi-tenant SaaS for repair shops. Each s
 
 **Demo status:** a development project, not a finished commercial product. No billing, no integrations, demo data only.
 
-Live demo: _link added after deploy_ (the free host sleeps when idle, the first load can take about a minute).
+Live demo: https://fixflow-demo-y125.onrender.com (the free host sleeps when idle, the first load can take about a minute).
+
+- Public shop page example: https://fixflow-demo-y125.onrender.com/s/demo-repair-shop
+- Demo login (shared, fake data only, registration is disabled): `demo@example.local` / `uJ5kGoDsJLyF_ZNt`
 
 ## Screenshots
 
