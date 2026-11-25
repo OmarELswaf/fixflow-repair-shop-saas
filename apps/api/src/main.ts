@@ -33,6 +33,17 @@ async function bootstrap(): Promise<void> {
     });
   }
   await app.listen(env.PORT, '0.0.0.0');
+  // Demo hosting: Render's free tier sleeps after 15 min without inbound
+  // traffic. Pinging our own public URL counts as traffic and keeps it awake.
+  const selfUrl = process.env.RENDER_EXTERNAL_URL;
+  if (selfUrl && process.env.KEEP_ALIVE !== 'false') {
+    setInterval(
+      () => {
+        fetch(`${selfUrl}/api/health`).catch(() => undefined);
+      },
+      10 * 60 * 1000,
+    ).unref();
+  }
 }
 // eslint-disable-next-line no-console
 bootstrap().catch((e: unknown) => {
