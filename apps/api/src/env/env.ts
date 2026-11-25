@@ -15,6 +15,12 @@ const EnvSchema = z.object({
   REGISTRATION_ENABLED: z.string().default('true'),
   /** Directory of the built web app; when set the API also serves it (single-origin hosting). */
   WEB_DIST_DIR: z.string().optional(),
+  /** Brevo (free tier) transactional email over HTTPS. Both needed to send reset emails. */
+  BREVO_API_KEY: z.string().optional(),
+  MAIL_FROM: z.string().optional(),
+  MAIL_FROM_NAME: z.string().default('FixFlow'),
+  /** Public base URL used in reset links. Falls back to the first WEB_ORIGINS entry. */
+  PUBLIC_APP_URL: z.string().optional(),
   WHATSAPP_ENABLED: z.string().default('false'),
   EMAIL_ENABLED: z.string().default('false'),
   AI_ENABLED: z.string().default('false'),

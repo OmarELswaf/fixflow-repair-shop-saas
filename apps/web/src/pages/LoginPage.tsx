@@ -89,6 +89,11 @@ export default function LoginPage() {
           </Box>
         </SectionCard>
         <Typography variant="body2" sx={{ mt: 2 }}>
+          <Link component={RouterLink} to="/forgot-password">
+            {document.documentElement.lang === 'en' ? 'Forgot password?' : 'نسيت كلمة المرور؟'}
+          </Link>
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>
           {t.noAccount}{' '}
           <Link component={RouterLink} to="/register">
             {t.createAccount}

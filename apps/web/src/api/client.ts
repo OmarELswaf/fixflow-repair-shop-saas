@@ -461,6 +461,22 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return res;
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await apiFetch<{ ok: boolean }>('/auth/forgot-password', {
+    method: 'POST',
+    auth: false,
+    body: { email },
+  });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await apiFetch<{ ok: boolean }>('/auth/reset-password', {
+    method: 'POST',
+    auth: false,
+    body: { token, password },
+  });
+}
+
 export async function register(input: {
   email: string;
   password: string;

@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
+import { PasswordResetController } from './password-reset.controller';
 import { AuthService } from './auth.service';
 import { PrismaAuthDb, PrismaRefreshSessionStore } from './prisma-auth.db';
 import { Argon2PasswordHasher } from './password';
@@ -32,7 +33,7 @@ import { PrismaModule } from '../prisma/prisma.module';
       verifyOptions: { algorithms: ['HS256'], issuer: 'fixflow', audience: 'fixflow-api' },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, PasswordResetController],
   providers: [
     AuthService,
     JwtAuthGuard,

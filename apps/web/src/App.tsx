@@ -19,6 +19,10 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() =>
+  import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ResetPasswordPage })),
+);
 const SelectTenantPage = lazy(() => import('./pages/SelectTenantPage'));
 const Shell = lazy(() => import('./pages/Shell'));
 const CustomersPage = lazy(() => import('./pages/CustomersPage'));
@@ -217,6 +221,24 @@ export default function App({ theme }: { theme: Theme }) {
                       <PublicOnly>
                         <PublicBar lang={lang} onLanguage={toggleLanguage} />
                         <LoginPage />
+                      </PublicOnly>
+                    }
+                  />
+                  <Route
+                    path="/forgot-password"
+                    element={
+                      <PublicOnly>
+                        <PublicBar lang={lang} onLanguage={toggleLanguage} />
+                        <ForgotPasswordPage />
+                      </PublicOnly>
+                    }
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={
+                      <PublicOnly>
+                        <PublicBar lang={lang} onLanguage={toggleLanguage} />
+                        <ResetPasswordPage />
                       </PublicOnly>
                     }
                   />

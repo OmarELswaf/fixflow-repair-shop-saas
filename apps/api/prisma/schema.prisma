@@ -98,6 +98,7 @@ model User {
   updatedAt    DateTime     @updatedAt
   memberships  Membership[]
   refreshSessions RefreshSession[]
+  passwordResetTokens PasswordResetToken[]
   assignedRepairs RepairOrder[] @relation("AssignedRepairs")
   stockMovements StockMovement[]
 
@@ -588,4 +589,17 @@ model AuditLog {
 
   @@index([tenantId, createdAt, id])
   @@map("audit_log")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
