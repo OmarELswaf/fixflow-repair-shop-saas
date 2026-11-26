@@ -198,7 +198,15 @@ if (!existsSync('apps/api/src/generated/prisma')) {
     'generated Prisma client missing — run npm run prisma:generate && npm run build first',
   );
 } else {
-  for (const harness of ['auth', 'repairs', 'inventory', 'reports']) {
+  for (const harness of [
+    'auth',
+    'repairs',
+    'inventory',
+    'reports',
+    'public-profile',
+    'tracking',
+    'threats',
+  ]) {
     if (!(await step(`test:${harness}:http`, 'npm', ['run', `test:${harness}:http`]))) {
       failed = true;
     }

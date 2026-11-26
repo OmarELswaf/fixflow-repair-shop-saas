@@ -31,6 +31,17 @@ function isPlaceholder(value: string | undefined): boolean {
   return !value || value.includes('CHANGE_ME');
 }
 
+/**
+ * Entropy floor for production JWT secrets: 32 bytes of entropy, not
+ * merely 32 characters. 43+ chars covers 32 random bytes in base64
+ * (43 chars) or hex (64 chars). 10+ distinct characters rejects
+ * padded words and repeated-character patterns while never refusing
+ * genuinely random hex/base64 output.
+ */
+function hasEnoughEntropy(value: string): boolean {
+  return value.length >= 43 && new Set(value).size >= 10;
+}
+
 const parsed = EnvSchema.safeParse(process.env);
 if (!parsed.success) {
   throw new Error(`Invalid environment: ${parsed.error.message}`);
@@ -39,6 +50,14 @@ if (parsed.data.NODE_ENV === 'production') {
   for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'DATABASE_URL'] as const) {
     if (isPlaceholder(parsed.data[key])) {
       throw new Error(`Production requires a real value for ${key}, not a placeholder.`);
+    }
+  }
+  for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'] as const) {
+    if (!hasEnoughEntropy(parsed.data[key])) {
+      throw new Error(
+        `Production ${key} must carry at least 32 bytes of entropy ` +
+          '(e.g. `openssl rand -hex 32` or `openssl rand -base64 32`).',
+      );
     }
   }
 }

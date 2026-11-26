@@ -37,7 +37,8 @@
     "test:pg16": "node scripts/local-pg16-test.mjs",
     "test:all": "node scripts/run-checks.mjs",
     "test:ci": "node scripts/run-checks.mjs",
-    "test:ui:review": "npm run build && node scripts/review-ui-check.mjs"
+    "test:ui:review": "npm run build && node scripts/review-ui-check.mjs",
+    "test:threats:http": "npm run build --workspace=@fixflow/api && node scripts/test-threats-http.mjs"
   },
   "version": "0.1.0",
   "workspaces": [
