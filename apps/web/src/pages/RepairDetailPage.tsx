@@ -1,4 +1,5 @@
 import DateTime from '../components/DateTime';
+import TrackingLinkCard from '../components/TrackingLinkCard';
 import { PageContainer, SectionCard } from '../components/SectionCard';
 import { PartLineStatusChip, RepairStatusChip } from '../components/StatusChip';
 import SearchPicker, { type SearchPickerOption } from '../components/SearchPicker';
@@ -605,6 +606,8 @@ export default function RepairDetailPage() {
             ))}
         </Box>
       </SectionCard>
+
+      <TrackingLinkCard repairId={id ?? ''} />
 
       <SectionCard title={t.receipt}>
         {receipt.isLoading && <CircularProgress size={20} aria-label="loading" />}

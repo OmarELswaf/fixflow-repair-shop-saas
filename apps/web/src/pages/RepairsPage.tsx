@@ -104,6 +104,7 @@ export default function RepairsPage() {
   const [deviceId, setDeviceId] = useState('');
   const [branchId, setBranchId] = useState('');
   const [problem, setProblem] = useState('');
+  const [expectedDate, setExpectedDate] = useState('');
   const [formError, setFormError] = useState('');
   const [serverError, setServerError] = useState('');
 
@@ -142,6 +143,9 @@ export default function RepairsPage() {
         deviceId,
         branchId,
         problemDescription: problem.trim(),
+        ...(expectedDate
+          ? { expectedReadyAt: new Date(`${expectedDate}T18:00:00`).toISOString() }
+          : {}),
       }),
     onSuccess: () => {
       setCustomerOption(null);
@@ -149,6 +153,7 @@ export default function RepairsPage() {
       setDeviceId('');
       setBranchId('');
       setProblem('');
+      setExpectedDate('');
       setFormError('');
       void queryClient.invalidateQueries({ queryKey: ['repairs'] });
     },
@@ -273,6 +278,11 @@ export default function RepairsPage() {
                 {branchLabel(repair.branchId)} · <DateTime value={repair.createdAt} />
               </Typography>
             </Box>
+            {repair.expectedReadyAt &&
+              !['ready', 'delivered', 'cancelled', 'unrepairable'].includes(repair.status) &&
+              new Date(repair.expectedReadyAt).getTime() < Date.now() && (
+                <Chip size="small" color="error" label={t.overdue} sx={{ mx: 1 }} />
+              )}
             <RepairStatusChip status={repair.status} />
           </Box>
         ))}
@@ -351,6 +361,15 @@ export default function RepairsPage() {
             rows={3}
             sx={{ mb: 2 }}
             required
+          />
+          <TextField
+            fullWidth
+            type="date"
+            label={t.expectedReadyDate}
+            value={expectedDate}
+            onChange={(e) => setExpectedDate(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ mb: 2 }}
           />
           {formError && (
             <Alert severity="warning" sx={{ mb: 2 }} role="alert">

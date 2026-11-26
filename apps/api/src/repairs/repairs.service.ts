@@ -70,7 +70,13 @@ export class RepairsService {
 
   async createRepair(
     ctx: TenantContext,
-    input: { customerId: string; deviceId: string; branchId: string; problemDescription: string },
+    input: {
+      customerId: string;
+      deviceId: string;
+      branchId: string;
+      problemDescription: string;
+      expectedReadyAt?: string;
+    },
   ) {
     return this.prisma.withTenant(ctx.tenantId, async (tx) => {
       const customer = await tx.customer.findFirst({
@@ -98,6 +104,7 @@ export class RepairsService {
           status: 'received',
           version: 0,
           problemDescription: input.problemDescription,
+          ...(input.expectedReadyAt ? { expectedReadyAt: new Date(input.expectedReadyAt) } : {}),
         },
       });
       await event(tx, ctx, order.id, null, 'received');

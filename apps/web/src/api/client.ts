@@ -268,6 +268,7 @@ export interface RepairOrder {
   deviceId: string;
   status: string;
   problemDescription?: string;
+  expectedReadyAt?: string | null;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -581,6 +582,7 @@ export async function createRepair(input: {
   deviceId: string;
   branchId: string;
   problemDescription: string;
+  expectedReadyAt?: string;
 }): Promise<RepairOrder> {
   return apiFetch<RepairOrder>('/repairs', { method: 'POST', body: input });
 }
@@ -901,4 +903,41 @@ export async function saveOwnPublicProfile(
 /** Unauthenticated public read — no token is sent (auth: false). */
 export async function fetchPublicShop(slug: string): Promise<PublicShop> {
   return apiFetch<PublicShop>(`/public/shops/${encodeURIComponent(slug)}`, { auth: false });
+}
+
+// ---------------------------------------------------------------------------
+// Customer repair tracking links
+// ---------------------------------------------------------------------------
+
+export interface TrackingLink {
+  token: string;
+  path: string;
+  expiresAt: string;
+}
+
+export interface PublicTracking {
+  shop: { name: string };
+  device: { brand: string; model: string };
+  status: string;
+  expectedReadyAt: string | null;
+  updatedAt: string;
+  timeline: { status: string; at: string }[];
+}
+
+export async function createTrackingLink(repairId: string): Promise<TrackingLink> {
+  return apiFetch<TrackingLink>(`/repairs/${encodeURIComponent(repairId)}/tracking-link`, {
+    method: 'POST',
+    body: {},
+  });
+}
+
+export async function revokeTrackingLink(repairId: string): Promise<{ revoked: number }> {
+  return apiFetch<{ revoked: number }>(`/repairs/${encodeURIComponent(repairId)}/tracking-link`, {
+    method: 'DELETE',
+  });
+}
+
+/** Unauthenticated public read; the token is the only credential. */
+export async function fetchTracking(token: string): Promise<PublicTracking> {
+  return apiFetch<PublicTracking>(`/public/track/${encodeURIComponent(token)}`, { auth: false });
 }

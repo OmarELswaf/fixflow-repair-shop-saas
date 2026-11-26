@@ -9,6 +9,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { ReportsModule } from './reports/reports.module';
 import { AdminModule } from './admin/admin.module';
 import { PublicProfileModule } from './public-profile/public-profile.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { QueueModule } from './queue/queue.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { QueueModule } from './queue/queue.module';
     ReportsModule,
     AdminModule,
     PublicProfileModule,
+    TrackingModule,
     QueueModule,
   ],
   controllers: [HealthController],

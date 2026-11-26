@@ -7,6 +7,7 @@ export const CreateRepairDto = z
     deviceId: z.string().min(1).max(200),
     branchId: z.string().min(1).max(200),
     problemDescription: z.string().trim().min(1).max(2000),
+    expectedReadyAt: z.iso.datetime().optional(),
   })
   .strict();
 
