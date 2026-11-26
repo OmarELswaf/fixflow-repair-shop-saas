@@ -25,6 +25,17 @@ async function bootstrap(): Promise<void> {
   // index.html for client routes. API routes stay under /api.
   if (env.WEB_DIST_DIR && existsSync(join(env.WEB_DIST_DIR, 'index.html'))) {
     const dist = env.WEB_DIST_DIR;
+    // Public landing page: static files under /welcome, served without the SPA shell.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    app.use((req: any, res: any, next: any) => {
+      if (req.method !== 'GET' || (req.path !== '/welcome' && req.path !== '/welcome/')) {
+        return next();
+      }
+      const page = join(dist, 'welcome', 'index.html');
+      if (!existsSync(page)) return next();
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.sendFile(page);
+    });
     app.use(express.static(dist, { index: false, maxAge: '1h' }));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     app.use((req: any, res: any, next: any) => {
