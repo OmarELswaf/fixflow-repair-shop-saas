@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run prisma:generate
+      - name: Format check
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests (API and web)
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: HTTP integration tests (embedded PostgreSQL)
+        run: |
+          npm run test:auth:http
+          npm run test:repairs:http
+          npm run test:inventory:http
+          npm run test:reports:http
+          npm run test:public-profile:http
+          npm run test:tracking:http
+      - name: npm audit (production dependencies, report only)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
