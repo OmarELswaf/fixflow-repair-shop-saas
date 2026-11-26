@@ -50,6 +50,7 @@ enum SubscriptionStatus {
 }
 
 model Tenant {
+  requireEstimateApproval Boolean @default(false)
   resellerTenants ResellerTenant[]
   id         String       @id @default(cuid())
   name       String
@@ -239,6 +240,10 @@ model RepairApproval {
   status    String      @default("pending")
   approverId String?
   createdAt DateTime    @default(now())
+  tokenHash String?     @unique
+  expiresAt DateTime?
+  decidedAt DateTime?
+  description String?
 
   @@index([tenantId, orderId, createdAt, id])
   @@map("repair_approvals")

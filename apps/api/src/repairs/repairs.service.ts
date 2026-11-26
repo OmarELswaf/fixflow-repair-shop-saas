@@ -12,6 +12,7 @@ import { canAccessBranch } from '../tenancy/permissions';
 import type { TenantContext } from '../tenancy/tenant-context';
 import { canTransition, type RepairStatusValue } from './repair-status';
 import { canAssignTechnician } from './assignment';
+import { ApprovalsService } from '../approvals/approvals.service';
 import { releaseReservedParts } from '../inventory/stock-ops';
 
 export class RepairNotFoundError extends Error {}
@@ -66,7 +67,10 @@ function event(
  */
 @Injectable()
 export class RepairsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly approvals: ApprovalsService,
+  ) {}
 
   async createRepair(
     ctx: TenantContext,
@@ -119,7 +123,13 @@ export class RepairsService {
 
   async listRepairs(
     ctx: TenantContext,
-    input: { status?: RepairStatusValue; branchId?: string; cursor?: string; limit?: number },
+    input: {
+      status?: RepairStatusValue;
+      branchId?: string;
+      search?: string;
+      cursor?: string;
+      limit?: number;
+    },
   ): Promise<{ items: unknown[]; nextCursor: string | null }> {
     if (input.branchId && !canAccessBranch(ctx, input.branchId)) {
       throw new ForbiddenException('Branch is outside the user scope.');
@@ -131,6 +141,14 @@ export class RepairsService {
       ...(ctx.role === 'technician' ? { assignedTechnicianId: ctx.userId } : {}),
     };
     if (input.status) where.status = input.status;
+    if (input.search) {
+      const q = input.search;
+      where.OR = [
+        { id: { contains: q, mode: 'insensitive' } },
+        { customer: { is: { phone: { contains: q } } } },
+        { customer: { is: { name: { contains: q, mode: 'insensitive' } } } },
+      ];
+    }
     if (input.branchId) where.branchId = input.branchId;
     const rows = await this.prisma.withTenant(ctx.tenantId, async (tx) =>
       tx.repairOrder.findMany({
@@ -268,6 +286,19 @@ export class RepairsService {
     }
     return this.prisma.withTenant(ctx.tenantId, async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${ctx.tenantId + ':' + order.id}, 0))`;
+      // Shop policy: costly repair work cannot start before the customer approves.
+      if (order.status === 'awaiting_approval' && input.toStatus === 'in_repair') {
+        const policy = await tx.tenant.findUnique({
+          where: { id: ctx.tenantId },
+          select: { requireEstimateApproval: true },
+        });
+        if (
+          policy?.requireEstimateApproval &&
+          !(await this.approvals.hasApprovedEstimate(tx, ctx.tenantId, order.id))
+        ) {
+          throw new UnprocessableEntityException('Customer approval of the estimate is required.');
+        }
+      }
       // Conditional update: exactly one row only if the version still
       // matches. A concurrent transition wins; the loser gets a 409.
       const updated = await tx.repairOrder.updateMany({

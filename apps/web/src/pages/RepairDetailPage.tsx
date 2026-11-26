@@ -1,5 +1,6 @@
 import DateTime from '../components/DateTime';
 import TrackingLinkCard from '../components/TrackingLinkCard';
+import EstimateCard from '../components/EstimateCard';
 import { PageContainer, SectionCard } from '../components/SectionCard';
 import { PartLineStatusChip, RepairStatusChip } from '../components/StatusChip';
 import SearchPicker, { type SearchPickerOption } from '../components/SearchPicker';
@@ -607,6 +608,7 @@ export default function RepairDetailPage() {
         </Box>
       </SectionCard>
 
+      <EstimateCard repairId={id ?? ''} />
       <TrackingLinkCard repairId={id ?? ''} />
 
       <SectionCard title={t.receipt}>

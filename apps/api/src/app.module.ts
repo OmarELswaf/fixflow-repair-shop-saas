@@ -9,6 +9,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { ReportsModule } from './reports/reports.module';
 import { AdminModule } from './admin/admin.module';
 import { PublicProfileModule } from './public-profile/public-profile.module';
+import { ApprovalsModule } from './approvals/approvals.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { QueueModule } from './queue/queue.module';
 
@@ -24,6 +25,7 @@ import { QueueModule } from './queue/queue.module';
     AdminModule,
     PublicProfileModule,
     TrackingModule,
+    ApprovalsModule,
     QueueModule,
   ],
   controllers: [HealthController],

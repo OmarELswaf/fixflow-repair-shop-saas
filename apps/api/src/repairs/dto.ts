@@ -35,6 +35,7 @@ export const ListRepairsQuery = z
   .object({
     status: z.enum(REPAIR_STATUSES).optional(),
     branchId: z.string().min(1).max(200).optional(),
+    search: z.string().trim().min(2).max(60).optional(),
     cursor: z.string().min(1).max(200).optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
   })

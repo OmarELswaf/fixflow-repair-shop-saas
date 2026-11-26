@@ -31,6 +31,7 @@
     "test:repairs:http": "npm run build --workspace=@fixflow/api && node scripts/test-repairs-http.mjs",
     "test:inventory:http": "npm run build --workspace=@fixflow/api && node scripts/test-inventory-http.mjs",
     "test:reports:http": "npm run build --workspace=@fixflow/api && node scripts/test-reports-http.mjs",
+    "test:approvals:http": "npm run build --workspace=@fixflow/api && node scripts/test-approvals-http.mjs",
     "test:tracking:http": "npm run build --workspace=@fixflow/api && node scripts/test-tracking-http.mjs",
     "test:public-profile:http": "npm run build --workspace=@fixflow/api && node scripts/test-public-profile-http.mjs",
     "test:contention:pg": "node scripts/test-contention.mjs",

@@ -65,6 +65,8 @@ export default function RepairsPage() {
   // bar, the chips and the list in sync in both directions.
   const statusFilter = searchParams.get('status') ?? '';
   const branchFilter = searchParams.get('branchId') ?? '';
+  const [searchText, setSearchText] = useState('');
+  const searchTerm = searchText.trim().length >= 2 ? searchText.trim() : '';
   const setFilter = (key: 'status' | 'branchId', value: string) => {
     setSearchParams(
       (prev) => {
@@ -84,10 +86,11 @@ export default function RepairsPage() {
     selectedMembership?.branches?.find((b) => b.id === id)?.name ?? id;
 
   const repairs = useInfiniteQuery({
-    queryKey: ['repairs', statusFilter, branchFilter],
+    queryKey: ['repairs', statusFilter, branchFilter, searchTerm],
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
       listRepairs({
         status: statusFilter || undefined,
+        search: searchTerm || undefined,
         branchId: branchFilter || undefined,
         cursor: pageParam ?? undefined,
         limit: 50,
@@ -178,6 +181,16 @@ export default function RepairsPage() {
         {t.repairsTitle}
       </Typography>
 
+      <TextField
+        fullWidth
+        size="small"
+        type="search"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        placeholder={t.searchRepairs}
+        slotProps={{ htmlInput: { 'aria-label': t.searchRepairs, maxLength: 60 } }}
+        sx={{ mb: 1.5 }}
+      />
       <Box
         role="group"
         aria-label={t.filterStatus}

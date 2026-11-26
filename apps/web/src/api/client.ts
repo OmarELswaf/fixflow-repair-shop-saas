@@ -564,6 +564,7 @@ export async function createDevice(
 
 export async function listRepairs(params: {
   status?: string;
+  search?: string;
   branchId?: string;
   cursor?: string | null;
   limit?: number;
@@ -571,6 +572,7 @@ export async function listRepairs(params: {
   const query = new URLSearchParams();
   if (params.status) query.set('status', params.status);
   if (params.branchId) query.set('branchId', params.branchId);
+  if (params.search) query.set('search', params.search);
   if (params.cursor) query.set('cursor', params.cursor);
   if (params.limit) query.set('limit', String(params.limit));
   const suffix = query.toString();
@@ -940,4 +942,69 @@ export async function revokeTrackingLink(repairId: string): Promise<{ revoked: n
 /** Unauthenticated public read; the token is the only credential. */
 export async function fetchTracking(token: string): Promise<PublicTracking> {
   return apiFetch<PublicTracking>(`/public/track/${encodeURIComponent(token)}`, { auth: false });
+}
+
+// ---------------------------------------------------------------------------
+// Estimates and customer approval
+// ---------------------------------------------------------------------------
+
+export interface EstimateRow {
+  id: string;
+  amount: string | null;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  decidedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface PublicEstimate {
+  shop: { name: string };
+  device: { brand: string; model: string };
+  description: string | null;
+  amount: string;
+  status: string;
+  decidedAt: string | null;
+}
+
+export async function createEstimate(
+  repairId: string,
+  input: { amount: number; description?: string },
+): Promise<{ id: string; token: string; path: string; expiresAt: string; amount: string }> {
+  return apiFetch(`/repairs/${encodeURIComponent(repairId)}/estimates`, {
+    method: 'POST',
+    body: input,
+  });
+}
+
+export async function listEstimates(repairId: string): Promise<EstimateRow[]> {
+  return apiFetch<EstimateRow[]>(`/repairs/${encodeURIComponent(repairId)}/estimates`);
+}
+
+export async function getApprovalPolicy(): Promise<{ requireEstimateApproval: boolean }> {
+  return apiFetch('/tenants/me/approval-policy');
+}
+
+export async function setApprovalPolicy(
+  requireEstimateApproval: boolean,
+): Promise<{ requireEstimateApproval: boolean }> {
+  return apiFetch('/tenants/me/approval-policy', {
+    method: 'PUT',
+    body: { requireEstimateApproval },
+  });
+}
+
+export async function fetchEstimate(token: string): Promise<PublicEstimate> {
+  return apiFetch<PublicEstimate>(`/public/approve/${encodeURIComponent(token)}`, { auth: false });
+}
+
+export async function decideEstimate(
+  token: string,
+  decision: 'approve' | 'reject',
+): Promise<{ status: string }> {
+  return apiFetch(`/public/approve/${encodeURIComponent(token)}`, {
+    method: 'POST',
+    body: { decision },
+    auth: false,
+  });
 }

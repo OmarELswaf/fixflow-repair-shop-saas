@@ -35,6 +35,7 @@ const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
 const PublicShopPage = lazy(() => import('./pages/PublicShopPage'));
 const TrackPage = lazy(() => import('./pages/TrackPage'));
+const ApprovePage = lazy(() => import('./pages/ApprovePage'));
 const PublicProfileSettingsPage = lazy(() => import('./pages/PublicProfileSettingsPage'));
 
 /** Public pages get a minimal top bar (app name + language toggle). */
@@ -267,6 +268,15 @@ export default function App({ theme }: { theme: Theme }) {
                       <>
                         <PublicBar lang={lang} onLanguage={toggleLanguage} />
                         <PublicShopPage />
+                      </>
+                    }
+                  />
+                  <Route
+                    path="/a/:token"
+                    element={
+                      <>
+                        <PublicBar lang={lang} onLanguage={toggleLanguage} />
+                        <ApprovePage />
                       </>
                     }
                   />
