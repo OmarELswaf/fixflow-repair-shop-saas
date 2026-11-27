@@ -208,7 +208,7 @@ export default function StockPage() {
       )}
       {stock.data && stockItems.length > 0 && (
         <TableContainer sx={{ mb: 3 }}>
-          <Table size="small">
+          <Table size="small" sx={{ minWidth: 520 }}>
             <TableHead>
               <TableRow>
                 <TableCell>{t.partName}</TableCell>

@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { queryClient } from './api/client';
 import theme from './theme';
+import './fonts/fonts.css';
 
 export const appQueryClient: QueryClient = queryClient;
 

@@ -269,6 +269,8 @@ export interface RepairOrder {
   status: string;
   problemDescription?: string;
   expectedReadyAt?: string | null;
+  customer?: { name: string; phone: string };
+  device?: { brand: string; model: string };
   version: number;
   createdAt: string;
   updatedAt: string;

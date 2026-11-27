@@ -154,6 +154,10 @@ export class RepairsService {
       tx.repairOrder.findMany({
         where,
         take: page.take,
+        include: {
+          customer: { select: { name: true, phone: true } },
+          device: { select: { brand: true, model: true } },
+        },
         ...(page.cursor ? { cursor: page.cursor, skip: page.skip } : {}),
         orderBy: page.orderBy,
       }),

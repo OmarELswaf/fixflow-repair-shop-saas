@@ -36,7 +36,8 @@ const theme: Theme = createTheme({
   },
   shape: { borderRadius: 12 },
   typography: {
-    fontFamily: "'Noto Sans Arabic', 'Segoe UI', system-ui, -apple-system, sans-serif",
+    fontFamily:
+      "'Plex Arabic', 'Noto Sans Arabic', 'Segoe UI', system-ui, -apple-system, sans-serif",
     h1: { fontSize: '1.75rem', lineHeight: 1.3, fontWeight: 700 },
     h2: { fontSize: '1.375rem', lineHeight: 1.35, fontWeight: 700 },
     h3: { fontSize: '1.125rem', lineHeight: 1.4, fontWeight: 700 },

@@ -49,6 +49,11 @@ import { REPAIR_STATUSES, statusLabel, useLanguage, useStrings } from '../i18n';
  * customer or device name is shown, because inventing one would be
  * fake data.
  */
+/** Short display number: last 6 chars of the id. shortcut: not guaranteed unique, upgrade to a per-shop counter if shops need strict numbering. */
+export function shortRepairNumber(id: string): string {
+  return id.slice(-6).toUpperCase();
+}
+
 export default function RepairsPage() {
   const t = useStrings();
   const lang = useLanguage();
@@ -280,11 +285,17 @@ export default function RepairsPage() {
           >
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography variant="body1" sx={{ fontWeight: 700 }} noWrap>
-                <bdi>{repair.id}</bdi>
+                <bdi dir="ltr">#{shortRepairNumber(repair.id)}</bdi>
+                {repair.customer?.name ? <> · {repair.customer.name}</> : null}
               </Typography>
-              {repair.problemDescription && (
+              {(repair.device || repair.problemDescription) && (
                 <Typography variant="body2" noWrap>
-                  {repair.problemDescription}
+                  {[
+                    repair.device ? `${repair.device.brand} ${repair.device.model}` : '',
+                    repair.problemDescription ?? '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </Typography>
               )}
               <Typography variant="body2" color="text.secondary" noWrap>

@@ -75,6 +75,8 @@ try {
     s1.items.map((i) => i.id),
     [r1.id],
   );
+  assert.equal(s1.items[0].customer.name, 'Sara Private');
+  assert.deepEqual(s1.items[0].device, { brand: 'Samsung', model: 'A54' });
   const s2 = (await api.get('/api/repairs?search=omar').set(auth(tokA)).expect(200)).body;
   assert.deepEqual(
     s2.items.map((i) => i.id),

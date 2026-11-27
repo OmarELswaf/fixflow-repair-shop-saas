@@ -71,6 +71,8 @@ describe('RepairsPage', () => {
           branchId: 'b2',
           customerId: 'c2',
           deviceId: 'd2',
+          customer: { name: 'سارة', phone: '+201000000001' },
+          device: { brand: 'Samsung', model: 'A54' },
           status: 'in_repair',
           version: 2,
           createdAt: '2026-11-24T00:00:00.000Z',
@@ -96,11 +98,12 @@ describe('RepairsPage', () => {
 
   it('renders repairs from the API with status filter and branch filter present', async () => {
     renderPage();
-    expect(await screen.findByText('r1')).toBeInTheDocument();
-    expect(screen.getByText('r2')).toBeInTheDocument();
-    // The list endpoint returns no customer/device names, so the card
-    // shows the real problem description from the same response.
+    expect(await screen.findByText('#R1')).toBeInTheDocument();
+    expect(screen.getByText('#R2')).toBeInTheDocument();
+    // Title is the short repair number plus customer name; the second line is device and problem.
     expect(screen.getByText('الشاشة لا تعمل')).toBeInTheDocument();
+    expect(screen.getByText(/سارة/)).toBeInTheDocument();
+    expect(screen.getByText('Samsung A54')).toBeInTheDocument();
     expect(screen.queryByText('c1')).not.toBeInTheDocument();
     expect(screen.getByLabelText('الحالة')).toBeInTheDocument();
     // Two branch selects exist: the list filter and the new-repair form.
@@ -139,12 +142,12 @@ describe('RepairsPage', () => {
         </QueryClientProvider>
       </MemoryRouter>,
     );
-    expect(await screen.findByText('r1')).toBeInTheDocument();
+    expect(await screen.findByText('#R1')).toBeInTheDocument();
     const filterGroup = screen.getByRole('group', { name: 'الحالة' });
     expect(filterGroup.querySelector('[aria-pressed="true"]')).toHaveTextContent('كل الحالات');
 
     fireEvent.click(screen.getByRole('button', { name: 'go filtered' }));
-    await screen.findByText('r1');
+    await screen.findByText('#R1');
     expect(listRepairsMock).toHaveBeenCalledWith({
       status: 'in_repair',
       branchId: undefined,
@@ -155,7 +158,7 @@ describe('RepairsPage', () => {
     // Same-route navigation back to /repairs (as the bottom nav does)
     // clears the filter instead of leaving the old one applied.
     fireEvent.click(screen.getByRole('button', { name: 'go unfiltered' }));
-    await screen.findByText('r1');
+    await screen.findByText('#R1');
     expect(listRepairsMock).toHaveBeenCalledWith({
       status: undefined,
       branchId: undefined,
